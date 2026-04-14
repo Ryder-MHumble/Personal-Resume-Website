@@ -1,4 +1,4 @@
-import type { RefCallback } from 'react'
+import type { CSSProperties, RefCallback } from 'react'
 import { insightExcerpts, pickText, sectionEyebrows } from '../../../data/siteContent'
 import { useAppStore } from '../../../systems/state/appStore'
 
@@ -12,6 +12,7 @@ export function InsightsSection({
   onOpenOverlay,
 }: InsightsSectionProps) {
   const locale = useAppStore((state) => state.locale)
+  const revealStyle = (index: number) => ({ '--reveal-index': index } as CSSProperties)
 
   return (
     <section
@@ -21,8 +22,8 @@ export function InsightsSection({
       id="insights"
     >
       <div className="insights-copy">
-        <p className="eyebrow">{pickText(sectionEyebrows.insights, locale)}</p>
-        <h2 className="display display--massive insights-copy__title">
+        <p className="eyebrow" data-reveal style={revealStyle(0)}>{pickText(sectionEyebrows.insights, locale)}</p>
+        <h2 className="display display--massive insights-copy__title" data-reveal style={revealStyle(1)}>
           {locale === 'zh'
             ? '判断不是装饰，它决定我会做什么、不做什么，以及系统该如何被放进现实。'
             : 'Judgment is not decoration. It defines what I build, what I refuse, and how a system enters reality.'}
@@ -30,12 +31,14 @@ export function InsightsSection({
       </div>
 
       <div className="insight-grid">
-        {insightExcerpts.map((insight) => (
+        {insightExcerpts.map((insight, index) => (
           <button
             className="insight-card"
             key={insight.id}
             type="button"
             onClick={() => onOpenOverlay(insight.id)}
+            data-reveal
+            style={revealStyle(2 + index)}
           >
             <p className="eyebrow">{pickText(insight.theme, locale)}</p>
             <h3 className="insight-card__title">{pickText(insight.title, locale)}</h3>

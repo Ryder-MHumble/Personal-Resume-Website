@@ -22,10 +22,10 @@ const handlePointerMove: PointerEventHandler<HTMLElement> = (event) => {
   const px = (event.clientX - bounds.left) / bounds.width - 0.5
   const py = (event.clientY - bounds.top) / bounds.height - 0.5
 
-  element.style.setProperty('--card-rotate-x', `${(-py * 10).toFixed(2)}deg`)
-  element.style.setProperty('--card-rotate-y', `${(px * 14).toFixed(2)}deg`)
-  element.style.setProperty('--card-shift-x', `${(px * 16).toFixed(2)}px`)
-  element.style.setProperty('--card-shift-y', `${(py * 16).toFixed(2)}px`)
+  element.style.setProperty('--card-rotate-x', `${(-py * 6).toFixed(2)}deg`)
+  element.style.setProperty('--card-rotate-y', `${(px * 8).toFixed(2)}deg`)
+  element.style.setProperty('--card-shift-x', `${(px * 10).toFixed(2)}px`)
+  element.style.setProperty('--card-shift-y', `${(py * 10).toFixed(2)}px`)
 }
 
 export function FeaturedWorkSection({
@@ -34,6 +34,7 @@ export function FeaturedWorkSection({
   onOpenProject,
 }: FeaturedWorkSectionProps) {
   const locale = useAppStore((state) => state.locale)
+  const revealStyle = (index: number) => ({ '--reveal-index': index } as CSSProperties)
 
   return (
     <section
@@ -43,7 +44,7 @@ export function FeaturedWorkSection({
       id="featured"
     >
       <div className="featured-header">
-        <div>
+        <div data-reveal style={revealStyle(0)}>
           <p className="eyebrow">{pickText(sectionEyebrows.featured, locale)}</p>
           <h2 className="section-title">
             {locale === 'zh'
@@ -51,7 +52,7 @@ export function FeaturedWorkSection({
               : 'Four flagship cases that explain how I work.'}
           </h2>
         </div>
-        <p className="featured-header__text">
+        <p className="featured-header__text" data-reveal style={revealStyle(1)}>
           {locale === 'zh'
             ? '它们覆盖了信息引擎、MCP 评测、招聘 Agent 与 ChatBI。我更在意问题结构、系统形态和落地结果，而不是把项目包装成漂亮名词。'
             : 'Together they cover signal systems, MCP evaluation, recruitment agents, and ChatBI. I care more about problem shape, system form, and outcomes than polished naming.'}
@@ -70,9 +71,11 @@ export function FeaturedWorkSection({
               {
                 '--project-accent': project.accent,
                 '--project-glaze': project.glaze,
+                '--reveal-index': 2 + index,
               } as CSSProperties
             }
             data-cursor-kind="case"
+            data-reveal
             data-project-id={project.id}
             type="button"
           >

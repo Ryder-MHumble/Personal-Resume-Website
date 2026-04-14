@@ -1,4 +1,4 @@
-import type { RefCallback } from 'react'
+import type { CSSProperties, RefCallback } from 'react'
 import {
   featuredProjects,
   pickText,
@@ -22,6 +22,7 @@ export function HeroSection({
 }: HeroSectionProps) {
   const locale = useAppStore((state) => state.locale)
   const monitorProject = featuredProjects[0]
+  const revealStyle = (index: number) => ({ '--reveal-index': index } as CSSProperties)
 
   return (
     <section
@@ -34,108 +35,126 @@ export function HeroSection({
       <div className="section__cross section__cross--br" aria-hidden="true" />
 
       <div className="hero-copy hero-copy--personal">
-        <p className="eyebrow">{pickText(sectionEyebrows.hero, locale)}</p>
-        <p className="hero-copy__eyeline">{pickText(profileIdentity.roleLine, locale)}</p>
-        <h1 className="display display--hero hero-display">
+        <p className="eyebrow" data-reveal style={revealStyle(0)}>
+          {pickText(sectionEyebrows.hero, locale)}
+        </p>
+        <p className="hero-copy__eyeline" data-reveal style={revealStyle(1)}>
+          {pickText(profileIdentity.roleLine, locale)}
+        </p>
+        <h1 className="display display--hero hero-display" data-reveal style={revealStyle(2)}>
           <span className="hero-display__latin">{profileIdentity.brandName}</span>
           <span className="hero-display__formal">{profileIdentity.formalNameLatin}</span>
           <span className="hero-display__local">{pickText(profileIdentity.name, locale)}</span>
         </h1>
-        <p className="hero-copy__philosophy">{pickText(profileIdentity.philosophy, locale)}</p>
-        <p className="hero-copy__lede">{pickText(profileIdentity.positioning, locale)}</p>
-        <p className="hero-copy__summary">{pickText(profileIdentity.summary, locale)}</p>
+        <p className="hero-copy__philosophy" data-reveal style={revealStyle(3)}>
+          {pickText(profileIdentity.philosophy, locale)}
+        </p>
+        <p className="hero-copy__lede" data-reveal style={revealStyle(4)}>
+          {pickText(profileIdentity.positioning, locale)}
+        </p>
+        <p className="hero-copy__summary" data-reveal style={revealStyle(5)}>
+          {pickText(profileIdentity.summary, locale)}
+        </p>
 
-        <div className="hero-stats" aria-label={locale === 'zh' ? '关键信号' : 'Key proof points'}>
+        <div className="hero-proofbelt" aria-label={locale === 'zh' ? '关键信号' : 'Key proof points'}>
           {proofStats.slice(0, 4).map((stat) => (
-            <article className="hero-stat" key={stat.id}>
-              <span className="hero-stat__value">{stat.value}</span>
-              <span className="hero-stat__label">{pickText(stat.label, locale)}</span>
+            <article
+              className={`hero-proof ${stat.id === 'company-count' ? 'hero-proof--wide' : 'hero-proof--compact'}`}
+              data-reveal
+              key={stat.id}
+              style={revealStyle(6 + proofStats.findIndex((item) => item.id === stat.id))}
+            >
+              <span className="hero-proof__value">{stat.value}</span>
+              <div className="hero-proof__body">
+                <span className="hero-proof__label">{pickText(stat.label, locale)}</span>
+                <span className="hero-proof__note">{pickText(stat.note, locale)}</span>
+              </div>
             </article>
           ))}
         </div>
 
         <div className="hero-copy__actions">
-          <button className="pill pill--dark" type="button" onClick={() => onNavigate('featured')}>
+          <button
+            className="pill pill--dark"
+            data-reveal
+            style={revealStyle(10)}
+            type="button"
+            onClick={() => onNavigate('featured')}
+          >
             <span className="pill__dot" aria-hidden="true" />
             {pickText(profileIdentity.primaryCta, locale)}
           </button>
 
-          <button className="pill pill--ghost" type="button" onClick={() => onNavigate('contact')}>
+          <button
+            className="pill pill--ghost"
+            data-reveal
+            style={revealStyle(11)}
+            type="button"
+            onClick={() => onNavigate('contact')}
+          >
             {pickText(profileIdentity.secondaryCta, locale)}
           </button>
 
-          <button className="pill pill--light" type="button" onClick={() => onNavigate('timeline')}>
+          <button
+            className="pill pill--light"
+            data-reveal
+            style={revealStyle(12)}
+            type="button"
+            onClick={() => onNavigate('timeline')}
+          >
             {locale === 'zh' ? '浏览经历脊柱' : 'Browse Career Spine'}
           </button>
         </div>
       </div>
 
-      <div className="hero-window hero-window--personal">
-        <div className="hero-window__chrome">
-          <span className="hero-window__tag">
-            {locale === 'zh' ? 'AI 产品判断 / 实时空间场' : 'AI product judgment / realtime field'}
-          </span>
-          <span className="hero-window__tag">
+      <aside className="hero-dock" data-reveal style={revealStyle(7)}>
+        <div className="hero-dock__topline">
+          <span>{locale === 'zh' ? 'Current case' : 'Current case'}</span>
+          <span>
             {webglAvailable
-              ? locale === 'zh'
-                ? 'WebGL 已启用'
-                : 'WebGL active'
+              ? monitorProject.slug
               : locale === 'zh'
-                ? 'DOM 降级'
+                ? 'DOM fallback'
                 : 'DOM fallback'}
           </span>
         </div>
 
-        <div className="hero-window__body hero-window__body--personal">
-          <div className="hero-window__fallback">
-            <div className="hero-window__axis hero-window__axis--horizontal" />
-            <div className="hero-window__axis hero-window__axis--vertical" />
-            <div className="hero-window__core hero-window__core--white" />
-            <div className="hero-window__core hero-window__core--blue" />
-            <div className="hero-window__grain" />
-            <div className="hero-window__monitor">
-              <div className="hero-window__focus">
-                <p className="eyebrow">{locale === 'zh' ? 'Current focus' : 'Current focus'}</p>
-                <strong>{pickText(monitorProject.title, locale)}</strong>
-                <span>
-                  {pickText(monitorProject.company, locale)} / {monitorProject.period}
-                </span>
-              </div>
+        <article className="hero-dock__primary">
+          <div className="hero-dock__copy">
+            <span className="hero-dock__badge">{pickText(monitorProject.resultBadge, locale)}</span>
+            <strong>{pickText(monitorProject.title, locale)}</strong>
+            <p>
+              {pickText(monitorProject.company, locale)} / {monitorProject.period}
+            </p>
+          </div>
 
-              <div className="hero-window__poster">
-                <div className="hero-window__poster-plate hero-window__poster-plate--major" />
-                <div className="hero-window__poster-plate hero-window__poster-plate--minor" />
-                <div className="hero-window__signal hero-window__signal--one" />
-                <div className="hero-window__signal hero-window__signal--two" />
-              </div>
-
-              <div className="hero-window__signal-grid">
-                <article className="hero-window__signal-card">
-                  <span>{locale === 'zh' ? 'Selected metric' : 'Selected metric'}</span>
-                  <strong>{proofStats[3].value}</strong>
-                  <p>{pickText(proofStats[3].label, locale)}</p>
-                </article>
-                <article className="hero-window__signal-card">
-                  <span>{locale === 'zh' ? 'Latest system' : 'Latest system'}</span>
-                  <strong>{pickText(monitorProject.resultBadge, locale)}</strong>
-                  <p>{pickText(monitorProject.summary, locale)}</p>
-                </article>
-              </div>
+          <div className="hero-dock__poster" aria-hidden="true">
+            <div className="hero-dock__poster-grid" />
+            <div className="hero-dock__plate hero-dock__plate--one" />
+            <div className="hero-dock__plate hero-dock__plate--two" />
+            <div className="hero-dock__beam hero-dock__beam--one" />
+            <div className="hero-dock__beam hero-dock__beam--two" />
+            <div className="hero-dock__poster-label">
+              {pickText(monitorProject.category, locale)}
             </div>
           </div>
-        </div>
+        </article>
 
-        <div className="hero-window__footer hero-window__footer--personal">
-          <span>{pickText(profileIdentity.location, locale)}</span>
-          <span>
-            {locale === 'zh'
-              ? 'Agent 系统 / 平台工具 / 企业级 AI'
-              : 'Agent systems / platform tools / enterprise AI'}
-          </span>
+        <div className="hero-dock__signals">
+          <article className="hero-dock__signal">
+            <span>{locale === 'zh' ? 'Selected metric' : 'Selected metric'}</span>
+            <strong>{proofStats[3].value}</strong>
+            <p>{pickText(proofStats[3].note, locale)}</p>
+          </article>
+          <article className="hero-dock__signal">
+            <span>{locale === 'zh' ? 'Latest system' : 'Latest system'}</span>
+            <strong>{pickText(monitorProject.resultBadge, locale)}</strong>
+            <p>{pickText(monitorProject.summary, locale)}</p>
+          </article>
         </div>
-      </div>
+      </aside>
 
-      <div className="hero-rail">
+      <div className="hero-rail" data-reveal style={revealStyle(13)}>
         <p className="hero-rail__label">{locale === 'zh' ? '代表判断' : 'Selected signal'}</p>
         <p className="hero-rail__text">
           {locale === 'zh'

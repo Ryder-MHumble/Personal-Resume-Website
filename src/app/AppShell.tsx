@@ -84,6 +84,7 @@ const createLoadTasks = (sceneBoot: Promise<void>) => {
 }
 
 export function AppShell() {
+  const appShellRef = useRef<HTMLDivElement | null>(null)
   const pageTrackRef = useRef<HTMLDivElement | null>(null)
   const pageContentRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -515,6 +516,11 @@ export function AppShell() {
         domEl.style.setProperty('--focus-weight', sectionState.focusWeight.toFixed(4))
       })
 
+      if (appShellRef.current) {
+        appShellRef.current.dataset.scrollDirection = scroll.direction >= 0 ? 'down' : 'up'
+        appShellRef.current.dataset.velocityBand = scroll.velocityBand
+      }
+
       if (progressRailRef.current && progressFillRef.current) {
         progressRailRef.current.style.opacity = appStore.getState().ready ? '1' : '0'
         progressFillRef.current.style.transform = `scaleY(${scroll.progress.toFixed(4)})`
@@ -619,7 +625,13 @@ export function AppShell() {
   }, [])
 
   return (
-    <div className={`app-shell ${routeState.page === 'work' ? 'is-work-route' : 'is-home-route'}`}>
+    <div
+      ref={appShellRef}
+      className={`app-shell ${routeState.page === 'work' ? 'is-work-route' : 'is-home-route'}`}
+      data-scroll-direction="down"
+      data-velocity-band="idle"
+      data-transition-state={transitionState}
+    >
       <canvas ref={canvasRef} className="experience-canvas" aria-hidden="true" />
       <CursorLayer />
 

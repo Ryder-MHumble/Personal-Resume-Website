@@ -404,6 +404,10 @@ export const experienceTimeline: ExperienceEntry[] = [
         zh: '负责需求提出、迭代规划与外部项目组验收推进。',
         en: 'Owned requirement definition, iteration planning, and cross-team acceptance.',
       },
+      {
+        zh: '把研究组织的情报消费路径拆成可持续运行的产品节奏，而不是一次性信息抓取。',
+        en: 'Turned intelligence consumption for a research organization into a durable product rhythm instead of one-off information collection.',
+      },
     ],
     featured: true,
     kind: 'work',
@@ -432,6 +436,10 @@ export const experienceTimeline: ExperienceEntry[] = [
       {
         zh: '提出以 Agent 为载体的 MCP 评测方案，提升平台判断依据。',
         en: 'Designed an agent-centered MCP evaluation scheme that improved platform judgment.',
+      },
+      {
+        zh: '把“工具可调用”重新翻译成“平台可维护、可比较、可决策”的产品标准。',
+        en: 'Reframed “callable tools” into product standards around maintainability, comparability, and decision support.',
       },
     ],
     featured: true,
@@ -462,6 +470,10 @@ export const experienceTimeline: ExperienceEntry[] = [
         zh: 'ChatBI 构建 2000+ 数据样本，达到 100% 模型选择准确率和 94% 参数提取准确率。',
         en: 'Built 2000+ data samples for ChatBI, reaching 100% model selection accuracy and 94% parameter extraction accuracy.',
       },
+      {
+        zh: '把企业级 AI 需求从概念咨询拉回可运行流程，兼顾交付推进与客户接受度。',
+        en: 'Pulled enterprise AI requests back from conceptual consulting into operational flows that teams and clients could actually absorb.',
+      },
     ],
     featured: true,
     kind: 'work',
@@ -490,6 +502,10 @@ export const experienceTimeline: ExperienceEntry[] = [
       {
         zh: '参与将 MCP Server 能力整合进平台产品体验。',
         en: 'Contributed to integrating MCP server capability into the platform experience.',
+      },
+      {
+        zh: '持续判断内部员工真实使用路径，避免平台只停留在“有能力但不好用”的状态。',
+        en: 'Continuously examined real employee usage paths so the platform would not remain “capable but awkward to use.”',
       },
     ],
     featured: true,

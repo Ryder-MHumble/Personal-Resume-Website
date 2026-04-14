@@ -1,4 +1,4 @@
-import type { RefCallback } from 'react'
+import type { CSSProperties, RefCallback } from 'react'
 import { Footer } from '../../../components/Footer/Footer'
 import { contactChannels, pickText, profileIdentity, sectionEyebrows } from '../../../data/siteContent'
 import { useAppStore } from '../../../systems/state/appStore'
@@ -14,6 +14,7 @@ export function ContactSection({
   onNavigate,
 }: ContactSectionProps) {
   const locale = useAppStore((state) => state.locale)
+  const revealStyle = (index: number) => ({ '--reveal-index': index } as CSSProperties)
 
   return (
     <section
@@ -23,8 +24,8 @@ export function ContactSection({
       id="contact"
     >
       <div className="contact-surface">
-        <p className="eyebrow">{pickText(sectionEyebrows.contact, locale)}</p>
-        <div className="contact-surface__lead">
+        <p className="eyebrow" data-reveal style={revealStyle(0)}>{pickText(sectionEyebrows.contact, locale)}</p>
+        <div className="contact-surface__lead" data-reveal style={revealStyle(1)}>
           <h2 className="display display--end contact-surface__title">
             {locale === 'zh'
               ? '如果你需要一个能把复杂 AI 系统讲清楚、做出来、推进落地的人，我们可以聊。'
@@ -33,7 +34,7 @@ export function ContactSection({
           <p className="contact-surface__copy">{pickText(profileIdentity.availability, locale)}</p>
         </div>
 
-        <div className="contact-surface__actions">
+        <div className="contact-surface__actions" data-reveal style={revealStyle(2)}>
           <a className="pill pill--dark" data-cursor-kind="link" href="mailto:mhumble010221@gmail.com">
             <span className="pill__dot" aria-hidden="true" />
             {locale === 'zh' ? '发送邮件' : 'Send Email'}
@@ -47,12 +48,14 @@ export function ContactSection({
         </div>
 
         <div className="contact-surface__grid">
-          {contactChannels.map((item) => (
+          {contactChannels.map((item, index) => (
             <a
               className="contact-surface__item"
               data-cursor-kind="link"
               href={item.href}
               key={pickText(item.label, locale)}
+              data-reveal
+              style={revealStyle(3 + index)}
             >
               <span className="contact-surface__label">{pickText(item.label, locale)}</span>
               <span className="contact-surface__detail">{pickText(item.detail, locale)}</span>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { contactChannels, menuNote, navigationItems, pickText } from '../../data/siteContent'
 import { useAppStore } from '../../systems/state/appStore'
 import type { HomeSectionId } from '../../types/content'
@@ -16,11 +17,40 @@ export function MenuOverlay({
   onToggleLocale,
 }: MenuOverlayProps) {
   const locale = useAppStore((state) => state.locale)
+  const [rendered, setRendered] = useState(open)
+  const [closing, setClosing] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setRendered(true)
+      setClosing(false)
+      return
+    }
+
+    if (!rendered) {
+      return
+    }
+
+    setClosing(true)
+
+    const timer = window.setTimeout(() => {
+      setClosing(false)
+      setRendered(false)
+    }, 260)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [open, rendered])
+
+  if (!rendered && !open) {
+    return null
+  }
 
   return (
     <aside
       id="menu-overlay"
-      className={`menu-overlay ${open ? 'is-open' : ''}`}
+      className={`menu-overlay ${open ? 'is-open' : ''} ${closing ? 'is-closing' : ''}`}
       aria-hidden={!open}
       aria-modal="true"
       role="dialog"
@@ -40,15 +70,18 @@ export function MenuOverlay({
 
         <div className="menu-overlay__body">
           <nav className="menu-overlay__nav" aria-label="Sections">
-            {navigationItems.map((link) => (
+            {navigationItems.map((link, index) => (
               <button
                 className="menu-link"
                 key={link.id}
                 type="button"
                 onClick={() => onNavigate(link.id)}
               >
-                <span className="menu-link__label">{pickText(link.label, locale)}</span>
-                <span className="menu-link__detail">{pickText(link.detail, locale)}</span>
+                <span className="menu-link__index">{String(index + 1).padStart(2, '0')}</span>
+                <span className="menu-link__content">
+                  <span className="menu-link__label">{pickText(link.label, locale)}</span>
+                  <span className="menu-link__detail">{pickText(link.detail, locale)}</span>
+                </span>
               </button>
             ))}
           </nav>

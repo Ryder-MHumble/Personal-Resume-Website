@@ -6,7 +6,9 @@ export function Preloader() {
   const transitionState = useAppStore((state) => state.transitionState)
   const percent = useMemo(() => Math.round(progress * 100), [progress])
   const stateClass =
-    transitionState === 'introLock'
+    transitionState === 'preloading'
+      ? 'is-preloading'
+      : transitionState === 'introLock'
       ? 'is-locking'
       : transitionState === 'introHandoff'
         ? 'is-handoff'
@@ -21,6 +23,10 @@ export function Preloader() {
       className={`preloader ${stateClass}`}
       aria-hidden={transitionState === 'ready'}
     >
+      <div className="preloader__veil" aria-hidden="true" />
+      <div className="preloader__aperture" aria-hidden="true" />
+      <div className="preloader__glowline" aria-hidden="true" />
+
       <div className="preloader__bar">
         <div
           className="preloader__bar-fill"

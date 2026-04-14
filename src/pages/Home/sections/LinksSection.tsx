@@ -1,4 +1,4 @@
-import type { RefCallback } from 'react'
+import type { CSSProperties, RefCallback } from 'react'
 import { linkSurfaces, pickText, sectionEyebrows } from '../../../data/siteContent'
 import { useAppStore } from '../../../systems/state/appStore'
 
@@ -8,6 +8,7 @@ interface LinksSectionProps {
 
 export function LinksSection({ sectionRef }: LinksSectionProps) {
   const locale = useAppStore((state) => state.locale)
+  const revealStyle = (index: number) => ({ '--reveal-index': index } as CSSProperties)
 
   return (
     <section
@@ -17,8 +18,8 @@ export function LinksSection({ sectionRef }: LinksSectionProps) {
       id="links"
     >
       <div className="links-copy">
-        <p className="eyebrow">{pickText(sectionEyebrows.links, locale)}</p>
-        <h2 className="section-title">
+        <p className="eyebrow" data-reveal style={revealStyle(0)}>{pickText(sectionEyebrows.links, locale)}</p>
+        <h2 className="section-title" data-reveal style={revealStyle(1)}>
           {locale === 'zh'
             ? '继续深挖时，你会进入这些外部表面。'
             : 'If you want to dig deeper, these are the surfaces to enter next.'}
@@ -26,8 +27,8 @@ export function LinksSection({ sectionRef }: LinksSectionProps) {
       </div>
 
       <div className="link-surface-grid">
-        {linkSurfaces.map((surface) => (
-          <article className="link-surface" key={surface.id}>
+        {linkSurfaces.map((surface, index) => (
+          <article className="link-surface" data-reveal key={surface.id} style={revealStyle(2 + index)}>
             <p className="eyebrow">{pickText(surface.kicker, locale)}</p>
             <h3 className="link-surface__title">{pickText(surface.title, locale)}</h3>
             <p className="link-surface__description">{pickText(surface.description, locale)}</p>
