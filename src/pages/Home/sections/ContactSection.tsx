@@ -7,11 +7,13 @@ import type { HomeSectionId } from '../../../types/content'
 interface ContactSectionProps {
   sectionRef: RefCallback<HTMLElement>
   onNavigate: (sectionId: HomeSectionId) => void
+  onOpenResources: () => void
 }
 
 export function ContactSection({
   sectionRef,
   onNavigate,
+  onOpenResources,
 }: ContactSectionProps) {
   const locale = useAppStore((state) => state.locale)
   const revealStyle = (index: number) => ({ '--reveal-index': index } as CSSProperties)
@@ -64,7 +66,7 @@ export function ContactSection({
         </div>
       </div>
 
-      <Footer />
+      <Footer currentPage="home" onNavigate={onNavigate} onOpenResources={onOpenResources} />
     </section>
   )
 }

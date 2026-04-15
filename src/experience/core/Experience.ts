@@ -25,9 +25,9 @@ const finalPassShader = {
   uniforms: {
     tDiffuse: { value: null },
     uTime: { value: 0 },
-    uAberration: { value: 0.01 },
-    uGrain: { value: 0.04 },
-    uVignette: { value: 0.26 },
+    uAberration: { value: 0.006 },
+    uGrain: { value: 0.02 },
+    uVignette: { value: 0.22 },
   },
   vertexShader: `
     varying vec2 vUv;
@@ -131,7 +131,7 @@ export class Experience {
     const composer = new EffectComposer(this.renderer)
     composer.addPass(new RenderPass(this.scene, this.camera))
 
-    this.bloomPass = new UnrealBloomPass(new Vector2(1, 1), 0.34, 0.55, 0.88)
+    this.bloomPass = new UnrealBloomPass(new Vector2(1, 1), 0.22, 0.36, 0.95)
     composer.addPass(this.bloomPass)
 
     this.finalPass = new ShaderPass(finalPassShader)
@@ -186,10 +186,11 @@ export class Experience {
     this.camera.aspect = viewport.width / viewport.height
     this.camera.updateProjectionMatrix()
 
-    this.renderer.setPixelRatio(viewport.dpr)
+    const effectiveDpr = Math.min(viewport.dpr, 1.2)
+    this.renderer.setPixelRatio(effectiveDpr)
     this.renderer.setSize(viewport.width, viewport.height)
     this.composer.setSize(viewport.width, viewport.height)
-    this.composer.setPixelRatio(viewport.dpr)
+    this.composer.setPixelRatio(effectiveDpr)
   }
 
   update({
@@ -205,7 +206,14 @@ export class Experience {
     deviceProfile: DeviceProfile
     reducedMotion: boolean
   }) {
-    if (!this.isSupported || !this.world || !this.composer || !this.finalPass || !this.bloomPass) {
+    if (
+      !this.isSupported ||
+      !this.world ||
+      !this.composer ||
+      !this.finalPass ||
+      !this.bloomPass ||
+      !this.renderer
+    ) {
       return
     }
 
@@ -242,13 +250,19 @@ export class Experience {
 
     const fx = this.world.getPostFxTargets()
 
-    this.bloomPass.strength = fx.bloom
-    this.bloomPass.radius = 0.5
-    this.bloomPass.threshold = 0.92
+    if (reducedMotion || deviceProfile === 'mobileLite') {
+      this.renderer.render(this.scene, this.camera)
+      return
+    }
+
+    const fxScale = deviceProfile === 'desktop' ? 0.72 : 0.46
+    this.bloomPass.strength = fx.bloom * fxScale
+    this.bloomPass.radius = deviceProfile === 'desktop' ? 0.42 : 0.34
+    this.bloomPass.threshold = 0.95
     this.finalPass.uniforms.uTime.value = time
-    this.finalPass.uniforms.uAberration.value = fx.chroma
-    this.finalPass.uniforms.uGrain.value = fx.grain
-    this.finalPass.uniforms.uVignette.value = fx.vignette
+    this.finalPass.uniforms.uAberration.value = fx.chroma * fxScale
+    this.finalPass.uniforms.uGrain.value = fx.grain * (deviceProfile === 'desktop' ? 0.65 : 0.4)
+    this.finalPass.uniforms.uVignette.value = 0.24 + fx.vignette * 0.52
 
     this.composer.render()
   }

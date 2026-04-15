@@ -1,6 +1,5 @@
 import type { CSSProperties, RefCallback } from 'react'
 import {
-  featuredProjects,
   pickText,
   profileIdentity,
   proofStats,
@@ -12,16 +11,13 @@ import { useAppStore } from '../../../systems/state/appStore'
 interface HeroSectionProps {
   sectionRef: RefCallback<HTMLElement>
   onNavigate: (sectionId: HomeSectionId) => void
-  webglAvailable: boolean
 }
 
 export function HeroSection({
   sectionRef,
   onNavigate,
-  webglAvailable,
 }: HeroSectionProps) {
   const locale = useAppStore((state) => state.locale)
-  const monitorProject = featuredProjects[0]
   const revealStyle = (index: number) => ({ '--reveal-index': index } as CSSProperties)
 
   return (
@@ -106,53 +102,6 @@ export function HeroSection({
           </button>
         </div>
       </div>
-
-      <aside className="hero-dock" data-reveal style={revealStyle(7)}>
-        <div className="hero-dock__topline">
-          <span>{locale === 'zh' ? 'Current case' : 'Current case'}</span>
-          <span>
-            {webglAvailable
-              ? monitorProject.slug
-              : locale === 'zh'
-                ? 'DOM fallback'
-                : 'DOM fallback'}
-          </span>
-        </div>
-
-        <article className="hero-dock__primary">
-          <div className="hero-dock__copy">
-            <span className="hero-dock__badge">{pickText(monitorProject.resultBadge, locale)}</span>
-            <strong>{pickText(monitorProject.title, locale)}</strong>
-            <p>
-              {pickText(monitorProject.company, locale)} / {monitorProject.period}
-            </p>
-          </div>
-
-          <div className="hero-dock__poster" aria-hidden="true">
-            <div className="hero-dock__poster-grid" />
-            <div className="hero-dock__plate hero-dock__plate--one" />
-            <div className="hero-dock__plate hero-dock__plate--two" />
-            <div className="hero-dock__beam hero-dock__beam--one" />
-            <div className="hero-dock__beam hero-dock__beam--two" />
-            <div className="hero-dock__poster-label">
-              {pickText(monitorProject.category, locale)}
-            </div>
-          </div>
-        </article>
-
-        <div className="hero-dock__signals">
-          <article className="hero-dock__signal">
-            <span>{locale === 'zh' ? 'Selected metric' : 'Selected metric'}</span>
-            <strong>{proofStats[3].value}</strong>
-            <p>{pickText(proofStats[3].note, locale)}</p>
-          </article>
-          <article className="hero-dock__signal">
-            <span>{locale === 'zh' ? 'Latest system' : 'Latest system'}</span>
-            <strong>{pickText(monitorProject.resultBadge, locale)}</strong>
-            <p>{pickText(monitorProject.summary, locale)}</p>
-          </article>
-        </div>
-      </aside>
 
       <div className="hero-rail" data-reveal style={revealStyle(13)}>
         <p className="hero-rail__label">{locale === 'zh' ? '代表判断' : 'Selected signal'}</p>

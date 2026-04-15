@@ -40,9 +40,17 @@ export function TimelineSection({
           {pickText(sectionEyebrows.timeline, locale)}
         </p>
         <h2 className="display display--contrast timeline-copy__title" data-reveal style={revealStyle(1)}>
-          {locale === 'zh'
-            ? '我的履历不是零散站点，而是一条持续把 AI 能力压进现实场景的职业脊柱。'
-            : 'My background is not a loose list of stops. It is a career spine shaped by turning AI capability into real operating systems.'}
+          {locale === 'zh' ? (
+            <>
+              <span>我的经历不是零散站点，</span>
+              <span className="timeline-copy__title-emphasis">而是一条把 AI 能力持续压进真实场景的职业脊柱。</span>
+            </>
+          ) : (
+            <>
+              <span>My path is not a loose list of stops.</span>
+              <span className="timeline-copy__title-emphasis">It is a career spine built by turning AI capability into operating systems.</span>
+            </>
+          )}
         </h2>
       </div>
 

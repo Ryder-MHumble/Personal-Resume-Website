@@ -8,6 +8,7 @@ import { assetManifest } from '../data/assets'
 import { getProjectDetail, projectDetails } from '../data/projectDetails'
 import type { Experience } from '../experience/core/Experience'
 import { HomePage } from '../pages/Home/HomePage'
+import { ResourcesPage } from '../pages/Resources/ResourcesPage'
 import { WorkPage } from '../pages/Work/WorkPage'
 import { ScrollManager } from '../systems/scroll/ScrollManager'
 import { appStore, setAppState, useAppStore } from '../systems/state/appStore'
@@ -16,6 +17,7 @@ import type { DeviceProfile, PointerState, SectionSpec } from '../types/runtime'
 import { clamp } from '../utils/math'
 import {
   createHomeRoute,
+  createResourcesRoute,
   createWorkRouteWithOrigin,
   getRouteUrl,
   parseLocationRoute,
@@ -102,6 +104,8 @@ export function AppShell() {
   })
 
   const pointerRef = useRef<PointerState>({ x: 0, y: 0 })
+  const pointerRafRef = useRef<number | null>(null)
+  const pendingPointerRef = useRef<PointerState | null>(null)
   const experienceRef = useRef<Experience | null>(null)
   const scrollManagerRef = useRef<ScrollManager | null>(null)
   const captureModeRef = useRef(false)
@@ -116,7 +120,6 @@ export function AppShell() {
   const routeRef = useRef<RouteState>(routeState)
 
   const menuOpen = useAppStore((state) => state.menuOpen)
-  const webglAvailable = useAppStore((state) => state.webglAvailable)
   const activeOverlay = useAppStore((state) => state.activeOverlay)
   const locale = useAppStore((state) => state.locale)
   const transitionState = useAppStore((state) => state.transitionState)
@@ -310,6 +313,20 @@ export function AppShell() {
     applyRoute(createHomeRoute(routeState.restoreProjectId, routeState.restoreScrollY))
   }
 
+  const handleOpenResources = () => {
+    if (routeRef.current.page === 'resources') {
+      closeMenu()
+      return
+    }
+
+    const fallbackScrollY = scrollManagerRef.current?.getCurrent() ?? window.scrollY
+    const restoreScrollY =
+      routeRef.current.page === 'home' ? fallbackScrollY : routeRef.current.restoreScrollY
+
+    applyRoute(createResourcesRoute(routeRef.current.restoreProjectId, restoreScrollY))
+    scrollManagerRef.current?.jumpTo(0)
+  }
+
   useEffect(() => {
     routeRef.current = routeState
     syncSectionSpecs()
@@ -348,7 +365,7 @@ export function AppShell() {
   }, [activeProject, routeState.page])
 
   useEffect(() => {
-    if (routeState.page === 'work') {
+    if (routeState.page !== 'home') {
       scrollManagerRef.current?.jumpTo(0)
       return
     }
@@ -462,13 +479,38 @@ export function AppShell() {
     syncDeviceState()
 
     const pointerMove = (event: PointerEvent) => {
-      pointerRef.current = {
+      const state = appStore.getState()
+
+      if (state.reducedMotion || state.deviceProfile !== 'desktop') {
+        return
+      }
+
+      pendingPointerRef.current = {
         x: (event.clientX / window.innerWidth) * 2 - 1,
         y: (event.clientY / window.innerHeight) * 2 - 1,
       }
+
+      if (pointerRafRef.current !== null) {
+        return
+      }
+
+      pointerRafRef.current = window.requestAnimationFrame(() => {
+        pointerRafRef.current = null
+
+        if (pendingPointerRef.current) {
+          pointerRef.current = pendingPointerRef.current
+          pendingPointerRef.current = null
+        }
+      })
     }
 
     const pointerLeave = () => {
+      if (pointerRafRef.current !== null) {
+        window.cancelAnimationFrame(pointerRafRef.current)
+        pointerRafRef.current = null
+      }
+
+      pendingPointerRef.current = null
       pointerRef.current = { x: 0, y: 0 }
     }
 
@@ -477,7 +519,7 @@ export function AppShell() {
     })
     resizeObserver.observe(pageContent)
 
-    window.addEventListener('pointermove', pointerMove)
+    window.addEventListener('pointermove', pointerMove, { passive: true })
     window.addEventListener('pointerleave', pointerLeave)
     window.addEventListener('resize', syncDeviceState)
     reducedMotionMedia.addEventListener('change', syncDeviceState)
@@ -605,6 +647,10 @@ export function AppShell() {
     return () => {
       disposed = true
       window.cancelAnimationFrame(animationFrame)
+      if (pointerRafRef.current !== null) {
+        window.cancelAnimationFrame(pointerRafRef.current)
+        pointerRafRef.current = null
+      }
       resizeObserver.disconnect()
       window.removeEventListener('pointermove', pointerMove)
       window.removeEventListener('pointerleave', pointerLeave)
@@ -627,7 +673,13 @@ export function AppShell() {
   return (
     <div
       ref={appShellRef}
-      className={`app-shell ${routeState.page === 'work' ? 'is-work-route' : 'is-home-route'}`}
+      className={`app-shell ${
+        routeState.page === 'work'
+          ? 'is-work-route'
+          : routeState.page === 'resources'
+            ? 'is-resources-route'
+            : 'is-home-route'
+      }`}
       data-scroll-direction="down"
       data-velocity-band="idle"
       data-transition-state={transitionState}
@@ -643,9 +695,11 @@ export function AppShell() {
         onToggleLocale={handleToggleLocale}
       />
       <MenuOverlay
+        currentPage={routeState.page}
         open={menuOpen}
         onClose={closeMenu}
         onNavigate={(sectionId) => handleNavigate(sectionId)}
+        onOpenResources={handleOpenResources}
         onToggleLocale={handleToggleLocale}
       />
       <DetailOverlay />
@@ -666,14 +720,16 @@ export function AppShell() {
                 onBackHome={handleBackHome}
                 onOpenProject={handleOpenSiblingProject}
               />
+            ) : routeState.page === 'resources' ? (
+              <ResourcesPage onNavigateHome={handleNavigate} onOpenResources={handleOpenResources} />
             ) : (
               <HomePage
                 bindSection={bindSection}
                 highlightedProjectId={highlightedProjectId}
                 onNavigate={handleNavigate}
+                onOpenResources={handleOpenResources}
                 onOpenOverlay={handleOpenOverlay}
                 onOpenProject={handleOpenProject}
-                webglAvailable={webglAvailable}
               />
             )}
           </div>

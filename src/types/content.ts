@@ -2,16 +2,23 @@ export type Locale = 'zh' | 'en'
 
 export type OverlayType = 'experience' | 'insight'
 
-export type AppPage = 'home' | 'work'
+export type AppPage = 'home' | 'work' | 'resources'
 
 export const projectSlugs = [
   'info-engine',
   'mcp-eval',
   'smart-recruitment',
   'chatbi',
+  'core-platform',
+  'dean-workbench',
+  'scholar-workbench',
+  'monitoring-framework',
+  'agent-gateway',
+  'doc2brief',
 ] as const
 
 export type ProjectSlug = (typeof projectSlugs)[number]
+export type ProjectTrack = 'career' | 'platform'
 
 export type HomeSectionId =
   | 'hero'
@@ -69,6 +76,8 @@ export interface CapabilityTag {
 export interface ProjectCase {
   id: string
   slug: ProjectSlug
+  track: ProjectTrack
+  metricAsOf: string
   title: LocalizedText
   company: LocalizedText
   period: string
@@ -83,7 +92,13 @@ export interface ProjectCase {
   accent: string
   glaze: string
   resultBadge: LocalizedText
+  resourceLinks: ProjectResourceLink[]
   link?: string
+}
+
+export interface ProjectResourceLink {
+  label: LocalizedText
+  href: string
 }
 
 export interface ProjectMetric {
@@ -191,4 +206,34 @@ export interface NavigationItem {
   id: HomeSectionId
   label: LocalizedText
   detail: LocalizedText
+}
+
+export interface ResourceHubIntro {
+  eyebrow: LocalizedText
+  title: LocalizedText
+  summary: LocalizedText
+  note: LocalizedText
+}
+
+export interface ResourceHubHighlight {
+  id: string
+  label: LocalizedText
+  value: string
+  note: LocalizedText
+}
+
+export interface ResourceHubItem {
+  id: string
+  title: LocalizedText
+  detail: LocalizedText
+  href: string
+  kind: 'github' | 'guide' | 'tools' | 'method'
+  tags: string[]
+}
+
+export interface ResourceHubCollection {
+  id: string
+  title: LocalizedText
+  description: LocalizedText
+  items: ResourceHubItem[]
 }

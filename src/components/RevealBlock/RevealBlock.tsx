@@ -1,8 +1,6 @@
 import {
-  createElement,
   type CSSProperties,
   type ComponentPropsWithoutRef,
-  type ElementType,
   useEffect,
   useMemo,
   useRef,
@@ -10,8 +8,7 @@ import {
 } from 'react'
 import { useAppStore } from '../../systems/state/appStore'
 
-type RevealBlockProps<T extends ElementType> = {
-  as?: T
+type RevealBlockBaseProps = {
   children: React.ReactNode
   className?: string
   revealDelay?: number
@@ -20,12 +17,112 @@ type RevealBlockProps<T extends ElementType> = {
   rootMargin?: string
   threshold?: number
   style?: CSSProperties
-} & Omit<ComponentPropsWithoutRef<T>, 'as' | 'children' | 'className' | 'style'>
+}
+
+type RevealDivProps = RevealBlockBaseProps &
+  Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'className' | 'style'> & {
+    as?: 'div'
+  }
+
+type RevealArticleProps = RevealBlockBaseProps &
+  Omit<ComponentPropsWithoutRef<'article'>, 'children' | 'className' | 'style'> & {
+    as: 'article'
+  }
+
+type RevealButtonProps = RevealBlockBaseProps &
+  Omit<ComponentPropsWithoutRef<'button'>, 'children' | 'className' | 'style'> & {
+    as: 'button'
+  }
+
+type RevealAnchorProps = RevealBlockBaseProps &
+  Omit<ComponentPropsWithoutRef<'a'>, 'children' | 'className' | 'style'> & {
+    as: 'a'
+  }
+
+type RevealBlockProps =
+  | RevealDivProps
+  | RevealArticleProps
+  | RevealButtonProps
+  | RevealAnchorProps
 
 const DEFAULT_ROOT_MARGIN = '0px 0px -12% 0px'
+type EntryHandler = (entry: IntersectionObserverEntry) => void
 
-export function RevealBlock<T extends ElementType = 'div'>({
-  as,
+interface ObserverPoolEntry {
+  observer: IntersectionObserver
+  handlers: WeakMap<Element, EntryHandler>
+  refs: number
+}
+
+const observerPool = new Map<string, ObserverPoolEntry>()
+
+const getObserverPoolEntry = (rootMargin: string, threshold: number): ObserverPoolEntry => {
+  const key = `${rootMargin}|${threshold}`
+  const existing = observerPool.get(key)
+
+  if (existing) {
+    return existing
+  }
+
+  const handlers = new WeakMap<Element, EntryHandler>()
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const handler = handlers.get(entry.target)
+
+        if (handler) {
+          handler(entry)
+        }
+      })
+    },
+    {
+      threshold: [0, threshold, 0.6],
+      rootMargin,
+    },
+  )
+
+  const poolEntry: ObserverPoolEntry = {
+    observer,
+    handlers,
+    refs: 0,
+  }
+
+  observerPool.set(key, poolEntry)
+  return poolEntry
+}
+
+const observeShared = (
+  element: Element,
+  rootMargin: string,
+  threshold: number,
+  handler: EntryHandler,
+) => {
+  const key = `${rootMargin}|${threshold}`
+  const poolEntry = getObserverPoolEntry(rootMargin, threshold)
+  poolEntry.handlers.set(element, handler)
+  poolEntry.refs += 1
+  poolEntry.observer.observe(element)
+
+  return () => {
+    const current = observerPool.get(key)
+
+    if (!current) {
+      return
+    }
+
+    current.observer.unobserve(element)
+    current.handlers.delete(element)
+    current.refs = Math.max(0, current.refs - 1)
+
+    if (current.refs === 0) {
+      current.observer.disconnect()
+      observerPool.delete(key)
+    }
+  }
+}
+
+export function RevealBlock({
+  as = 'div',
   children,
   className,
   revealDelay = 0,
@@ -35,7 +132,7 @@ export function RevealBlock<T extends ElementType = 'div'>({
   threshold = 0.18,
   style,
   ...rest
-}: RevealBlockProps<T>) {
+}: RevealBlockProps) {
   const reducedMotion = useAppStore((state) => state.reducedMotion)
   const nodeRef = useRef<HTMLElement | null>(null)
   const enteredRef = useRef(false)
@@ -43,39 +140,36 @@ export function RevealBlock<T extends ElementType = 'div'>({
 
   useEffect(() => {
     if (reducedMotion) {
-      setInView(true)
+      enteredRef.current = true
       return
     }
 
     const node = nodeRef.current
 
     if (!node || typeof IntersectionObserver === 'undefined') {
-      setInView(true)
-      return
+      const fallbackFrame = window.requestAnimationFrame(() => {
+        setInView(true)
+      })
+
+      return () => {
+        window.cancelAnimationFrame(fallbackFrame)
+      }
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          enteredRef.current = true
-          setInView(true)
-          return
-        }
+    const stopObserving = observeShared(node, rootMargin, threshold, (entry) => {
+      if (entry.isIntersecting) {
+        enteredRef.current = true
+        setInView(true)
+        return
+      }
 
-        if (!revealOnce || !enteredRef.current) {
-          setInView(false)
-        }
-      },
-      {
-        threshold: [0, threshold, 0.6],
-        rootMargin,
-      },
-    )
-
-    observer.observe(node)
+      if (!revealOnce || !enteredRef.current) {
+        setInView(false)
+      }
+    })
 
     return () => {
-      observer.disconnect()
+      stopObserving()
     }
   }, [reducedMotion, revealOnce, rootMargin, threshold])
 
@@ -89,17 +183,71 @@ export function RevealBlock<T extends ElementType = 'div'>({
     [revealDelay, revealDistance, style],
   )
 
-  const Component = (as ?? 'div') as ElementType
+  const visible = reducedMotion || inView
+  const mergedClassName = `reveal-block ${visible ? 'is-inview' : ''}${className ? ` ${className}` : ''}`
+  const setNodeRef = (node: HTMLElement | null) => {
+    nodeRef.current = node
+  }
 
-  return createElement(
-    Component,
-    {
-      ...rest,
-      ref: nodeRef,
-      className: `reveal-block ${inView ? 'is-inview' : ''}${className ? ` ${className}` : ''}`,
-      style: mergedStyle,
-      'data-inview': inView ? 'true' : 'false',
-    },
-    children,
+  if (as === 'article') {
+    const articleProps = rest as Omit<ComponentPropsWithoutRef<'article'>, 'children' | 'className' | 'style'>
+
+    return (
+      <article
+        {...articleProps}
+        ref={setNodeRef}
+        className={mergedClassName}
+        style={mergedStyle}
+        data-inview={visible ? 'true' : 'false'}
+      >
+        {children}
+      </article>
+    )
+  }
+
+  if (as === 'button') {
+    const buttonProps = rest as Omit<ComponentPropsWithoutRef<'button'>, 'children' | 'className' | 'style'>
+
+    return (
+      <button
+        {...buttonProps}
+        ref={setNodeRef}
+        className={mergedClassName}
+        style={mergedStyle}
+        data-inview={visible ? 'true' : 'false'}
+      >
+        {children}
+      </button>
+    )
+  }
+
+  if (as === 'a') {
+    const anchorProps = rest as Omit<ComponentPropsWithoutRef<'a'>, 'children' | 'className' | 'style'>
+
+    return (
+      <a
+        {...anchorProps}
+        ref={setNodeRef}
+        className={mergedClassName}
+        style={mergedStyle}
+        data-inview={visible ? 'true' : 'false'}
+      >
+        {children}
+      </a>
+    )
+  }
+
+  const divProps = rest as Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'className' | 'style'>
+
+  return (
+    <div
+      {...divProps}
+      ref={setNodeRef}
+      className={mergedClassName}
+      style={mergedStyle}
+      data-inview={visible ? 'true' : 'false'}
+    >
+      {children}
+    </div>
   )
 }

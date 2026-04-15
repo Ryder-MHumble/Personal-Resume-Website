@@ -41,8 +41,22 @@ export const createWorkRouteWithOrigin = (
   restoreScrollY,
 })
 
+export const createResourcesRoute = (
+  restoreProjectId: string | null = null,
+  restoreScrollY = 0,
+): RouteState => ({
+  page: 'resources',
+  projectSlug: null,
+  restoreProjectId,
+  restoreScrollY,
+})
+
 export const getRouteUrl = (route: RouteState) =>
-  route.page === 'work' && route.projectSlug ? `/work/${route.projectSlug}` : '/'
+  route.page === 'work' && route.projectSlug
+    ? `/work/${route.projectSlug}`
+    : route.page === 'resources'
+      ? '/resources'
+      : '/'
 
 export const parseLocationRoute = (
   pathname: string,
@@ -50,8 +64,13 @@ export const parseLocationRoute = (
 ): RouteState => {
   const normalizedState = normalizeHistoryState(historyState)
   const cleanPath = pathname.replace(/\/+$/, '') || '/'
+  const resourcesRoute = cleanPath === '/resources'
   const workMatch = cleanPath.match(/^\/work\/([^/]+)$/)
   const rawProjectSlug = workMatch ? decodeURIComponent(workMatch[1]) : null
+
+  if (resourcesRoute) {
+    return createResourcesRoute(normalizedState.restoreProjectId, normalizedState.restoreScrollY)
+  }
 
   if (
     rawProjectSlug &&

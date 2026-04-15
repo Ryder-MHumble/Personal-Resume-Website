@@ -11,27 +11,23 @@ import { ContactSection } from './sections/ContactSection'
 interface HomePageProps {
   bindSection: (id: HomeSectionId) => RefCallback<HTMLElement>
   onNavigate: (sectionId: HomeSectionId) => void
+  onOpenResources: () => void
   onOpenProject: (slug: ProjectSlug, projectId: string) => void
   onOpenOverlay: (type: OverlayType, id: string) => void
   highlightedProjectId: string | null
-  webglAvailable: boolean
 }
 
 export function HomePage({
   bindSection,
   onNavigate,
+  onOpenResources,
   onOpenProject,
   onOpenOverlay,
   highlightedProjectId,
-  webglAvailable,
 }: HomePageProps) {
   return (
     <main className="home-page">
-      <HeroSection
-        sectionRef={bindSection('hero')}
-        onNavigate={onNavigate}
-        webglAvailable={webglAvailable}
-      />
+      <HeroSection sectionRef={bindSection('hero')} onNavigate={onNavigate} />
       <ProofSection sectionRef={bindSection('proof')} />
       <FeaturedWorkSection
         sectionRef={bindSection('featured')}
@@ -47,7 +43,11 @@ export function HomePage({
         sectionRef={bindSection('insights')}
         onOpenOverlay={(id) => onOpenOverlay('insight', id)}
       />
-      <ContactSection sectionRef={bindSection('contact')} onNavigate={onNavigate} />
+      <ContactSection
+        sectionRef={bindSection('contact')}
+        onNavigate={onNavigate}
+        onOpenResources={onOpenResources}
+      />
     </main>
   )
 }
